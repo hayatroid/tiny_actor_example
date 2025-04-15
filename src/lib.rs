@@ -24,3 +24,17 @@ impl AddActor {
         request.0 + request.1
     }
 }
+
+#[derive(Clone)]
+struct AddActorRef {
+    envelope_tx: mpsc::UnboundedSender<AddEnvelope>,
+}
+
+impl AddActorRef {
+    async fn send(&self, request: AddRequest) -> AddResponse {
+        let (response_tx, response_rx) = oneshot::channel();
+        let envelope = (request, response_tx);
+        self.envelope_tx.send(envelope).unwrap();
+        response_rx.await.unwrap()
+    }
+}
