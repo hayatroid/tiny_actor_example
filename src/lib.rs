@@ -26,15 +26,21 @@ impl AddActor {
 }
 
 #[derive(Clone)]
-struct AddActorRef {
+pub struct AddActorRef {
     envelope_tx: mpsc::UnboundedSender<AddEnvelope>,
 }
 
 impl AddActorRef {
-    async fn send(&self, request: AddRequest) -> AddResponse {
+    pub async fn send(&self, request: AddRequest) -> AddResponse {
         let (response_tx, response_rx) = oneshot::channel();
         let envelope = (request, response_tx);
         self.envelope_tx.send(envelope).unwrap();
         response_rx.await.unwrap()
     }
+}
+
+pub fn spawn_add_actor() -> AddActorRef {
+    let (envelope_tx, envelope_rx) = mpsc::unbounded_channel();
+    tokio::spawn(async { AddActor { envelope_rx }.run().await });
+    AddActorRef { envelope_tx }
 }
