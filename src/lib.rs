@@ -31,11 +31,11 @@ pub struct AddActorRef {
 }
 
 impl AddActorRef {
-    pub async fn send(&self, request: AddRequest) -> AddResponse {
+    pub fn send(&self, request: AddRequest) -> impl Future<Output = AddResponse> {
         let (response_tx, response_rx) = oneshot::channel();
         let envelope = (request, response_tx);
         self.envelope_tx.send(envelope).unwrap();
-        response_rx.await.unwrap()
+        async { response_rx.await.unwrap() }
     }
 }
 
