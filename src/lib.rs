@@ -16,7 +16,7 @@ impl AddActor {
         while let Some(envelope) = self.envelope_rx.recv().await {
             let (request, response_tx) = envelope;
             let response = self.handle(request).await;
-            response_tx.send(response).unwrap();
+            let _ = response_tx.send(response);
         }
     }
     async fn handle(&self, request: AddRequest) -> AddResponse {
@@ -31,11 +31,11 @@ pub struct AddActorRef {
 }
 
 impl AddActorRef {
-    pub fn send(&self, request: AddRequest) -> impl Future<Output = AddResponse> {
+    pub fn send(&self, request: AddRequest) -> oneshot::Receiver<AddResponse> {
         let (response_tx, response_rx) = oneshot::channel();
         let envelope = (request, response_tx);
-        self.envelope_tx.send(envelope).unwrap();
-        async { response_rx.await.unwrap() }
+        let _ = self.envelope_tx.send(envelope);
+        response_rx
     }
 }
 

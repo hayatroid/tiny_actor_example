@@ -12,6 +12,6 @@ async fn main() {
         }
     }
     for (i, j, future) in futures {
-        println!("{} + {} = {}", i, j, future.await);
+        println!("{} + {} = {}", i, j, future.await.unwrap());
     }
 }
