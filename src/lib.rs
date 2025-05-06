@@ -13,15 +13,14 @@ struct AddActor {
 
 impl AddActor {
     async fn run(&mut self) {
-        while let Some(envelope) = self.envelope_rx.recv().await {
-            let (request, response_tx) = envelope;
-            let response = self.handle(request).await;
-            let _ = response_tx.send(response);
+        while let Some((req, res_tx)) = self.envelope_rx.recv().await {
+            let res = self.handle(req).await;
+            let _ = res_tx.send(res);
         }
     }
-    async fn handle(&self, request: AddRequest) -> AddResponse {
+    async fn handle(&self, req: AddRequest) -> AddResponse {
         sleep(Duration::from_secs(1)).await;
-        request.0 + request.1
+        req.0 + req.1
     }
 }
 
@@ -31,11 +30,10 @@ pub struct AddActorRef {
 }
 
 impl AddActorRef {
-    pub fn send(&self, request: AddRequest) -> oneshot::Receiver<AddResponse> {
-        let (response_tx, response_rx) = oneshot::channel();
-        let envelope = (request, response_tx);
-        let _ = self.envelope_tx.send(envelope);
-        response_rx
+    pub fn send(&self, req: AddRequest) -> oneshot::Receiver<AddResponse> {
+        let (res_tx, res_rx) = oneshot::channel();
+        let _ = self.envelope_tx.send((req, res_tx));
+        res_rx
     }
 }
 
